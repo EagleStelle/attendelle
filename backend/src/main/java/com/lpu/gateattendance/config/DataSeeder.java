@@ -5,6 +5,7 @@ import com.lpu.gateattendance.model.Role;
 import com.lpu.gateattendance.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 public class DataSeeder implements CommandLineRunner {
 
     private final AppUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -44,6 +46,27 @@ public class DataSeeder implements CommandLineRunner {
 
             userRepository.saveAll(List.of(student1, student2, faculty1));
             System.out.println("Mock data seeded successfully.");
+        }
+
+        if (userRepository.findBySchoolId("admin").isEmpty()) {
+            AppUser admin = AppUser.builder()
+                    .schoolId("admin")
+                    .firstName("System")
+                    .lastName("Admin")
+                    .password(passwordEncoder.encode("admin123"))
+                    .role(Role.ADMIN)
+                    .build();
+
+            AppUser superAdmin = AppUser.builder()
+                    .schoolId("superadmin")
+                    .firstName("Super")
+                    .lastName("Admin")
+                    .password(passwordEncoder.encode("super123"))
+                    .role(Role.SUPER_ADMIN)
+                    .build();
+
+            userRepository.saveAll(List.of(admin, superAdmin));
+            System.out.println("Admin users seeded successfully.");
         }
     }
 }
