@@ -24,6 +24,7 @@
               hlmInput
               id="username"
               name="username"
+              autocomplete="username"
               [ngModel]="username()"
               (ngModelChange)="username.set($event)"
               [ngModelOptions]="{ standalone: true }"
@@ -37,6 +38,7 @@
                 hlmInput
                 id="password"
                 name="password"
+                autocomplete="current-password"
                 [type]="showPassword() ? 'text' : 'password'"
                 [ngModel]="password()"
                 (ngModelChange)="password.set($event)"

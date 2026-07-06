@@ -80,6 +80,7 @@
           sidebarOpen() ? 'w-full justify-start gap-3' : 'mx-auto size-10 justify-center p-0'
         "
         [attr.title]="!sidebarOpen() ? 'Logout' : null"
+        (click)="logout()"
       >
         <ng-icon name="lucideLogOut" class="shrink-0 text-lg" />
         @if (sidebarOpen()) {
@@ -101,8 +102,8 @@
 
       <div class="ml-auto flex items-center gap-3">
         <div class="hidden text-right leading-tight sm:block">
-          <p class="text-sm font-semibold">Osas Admin</p>
-          <p class="text-primary-foreground/70 text-xs">Administrator</p>
+          <p class="text-sm font-semibold capitalize">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</p>
+          <p class="text-primary-foreground/70 text-xs capitalize">{{ currentUser()?.role?.replace('_', ' ')?.toLowerCase() }}</p>
         </div>
         <div
           class="bg-primary-foreground/15 ring-primary-foreground/20 flex size-10 items-center justify-center rounded-full ring-1"

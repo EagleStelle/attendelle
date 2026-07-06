@@ -43,7 +43,7 @@ export class Login {
     }
 
     this.errorMessage.set('');
-    this.authService.login(this.username(), this.password()).subscribe({
+    this.authService.login(this.username(), this.password(), this.rememberMe()).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
       },

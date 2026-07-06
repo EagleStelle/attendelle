@@ -1,5 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthService } from '../../shared/auth/auth.service';
 import {
   NavigationEnd,
   Router,
@@ -71,9 +73,17 @@ export class AdminLayout {
   ];
 
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly platformId = inject(PLATFORM_ID);
   protected readonly pageTitle = signal(this.resolveTitle());
+  protected readonly currentUser = this.authService.currentUser;
 
   constructor() {
+    // Client-side authentication check for initial load (SSR bypasses guard)
+    if (isPlatformBrowser(this.platformId) && !this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+    }
+
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
@@ -89,5 +99,9 @@ export class AdminLayout {
 
   protected toggleSidebar(): void {
     this.sidebarOpen.set(!this.sidebarOpen());
+  }
+
+  protected logout(): void {
+    this.authService.logout();
   }
 }

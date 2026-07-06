@@ -28,7 +28,7 @@ export class AuthService {
 
   private loadToken() {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('auth_user');
+      const stored = localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user');
       if (stored) {
         try {
           this.currentUser.set(JSON.parse(stored));
@@ -39,14 +39,18 @@ export class AuthService {
     }
   }
 
-  login(schoolId: string, password: string): Observable<AuthResponse> {
+  login(schoolId: string, password: string, rememberMe: boolean = false): Observable<AuthResponse> {
     const apiUrl = (import.meta as any).env?.API_URL || 'http://localhost:8080/api';
     return this.http.post<AuthResponse>(`${apiUrl}/auth/login`, { schoolId, password })
       .pipe(
         tap((response) => {
           this.currentUser.set(response);
           if (typeof window !== 'undefined') {
-            localStorage.setItem('auth_user', JSON.stringify(response));
+            if (rememberMe) {
+              localStorage.setItem('auth_user', JSON.stringify(response));
+            } else {
+              sessionStorage.setItem('auth_user', JSON.stringify(response));
+            }
           }
         })
       );
@@ -56,6 +60,7 @@ export class AuthService {
     this.currentUser.set(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_user');
+      sessionStorage.removeItem('auth_user');
     }
     this.router.navigate(['/login']);
   }
