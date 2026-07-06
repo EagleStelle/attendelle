@@ -6,12 +6,14 @@ import { Students } from './pages/students/students';
 import { AttendanceLogs } from './pages/students/attendance-logs';
 import { Attendance } from './pages/attendance/attendance';
 import { Placeholder } from './pages/placeholder/placeholder';
+import { authGuard } from './shared/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
   {
     path: '',
     component: AdminLayout,
+    canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: Dashboard },
       {

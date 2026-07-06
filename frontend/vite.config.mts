@@ -7,6 +7,7 @@ import { playwright } from '@vitest/browser-playwright';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  envPrefix: ['VITE_', 'API_'],
   plugins: [angular(), viteTsConfigPaths()],
 
   test: {

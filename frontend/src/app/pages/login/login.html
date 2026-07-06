@@ -12,6 +12,11 @@
         <p hlmCardDescription>Enter your username and password to access your account.</p>
       </div>
       <div hlmCardContent>
+        @if (errorMessage()) {
+          <div class="mb-4 rounded bg-destructive/15 p-3 text-sm text-destructive">
+            {{ errorMessage() }}
+          </div>
+        }
         <form hlmFieldGroup (ngSubmit)="onSubmit()">
           <div hlmField>
             <label hlmFieldLabel for="username">Username</label>
