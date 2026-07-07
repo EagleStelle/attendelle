@@ -43,6 +43,19 @@ public class AppUser implements UserDetails {
     private String rfidTag;
 
     @Column
+    private String department;
+
+    @Column
+    private String course;
+
+    @Column
+    private String school;
+
+    // Public path to the stored photo, e.g. /uploads/students/<file>.jpg
+    @Column
+    private String photoUrl;
+
+    @Column
     private String password;
 
     @Override

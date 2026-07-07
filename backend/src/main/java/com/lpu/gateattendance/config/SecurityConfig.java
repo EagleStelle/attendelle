@@ -40,6 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/attendance/scan").permitAll() // Keep scan endpoint public for hardware
+                .requestMatchers("/uploads/**").permitAll() // Student photos loaded via <img> without auth header
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
