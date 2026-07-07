@@ -26,9 +26,17 @@ export class AttendanceStore {
       return `${pad(hour)}:${pad(m)}:${pad(s)} ${period}`;
     };
 
+    const hashSeed = (id: string) => {
+      let h = 7;
+      for (let i = 0; i < id.length; i++) {
+        h = (h * 31 + id.charCodeAt(i)) & 0x7fffffff;
+      }
+      return h + 7;
+    };
+
     const out: AttendanceRecord[] = [];
     for (const s of this.studentsStore.students()) {
-      let seed = Number(s.id) * 131 + 7;
+      let seed = hashSeed(s.id);
       const rand = () => {
         seed = (seed * 1103515245 + 12345) & 0x7fffffff;
         return seed / 0x7fffffff;

@@ -1,0 +1,171 @@
+<div class="flex flex-col gap-4">
+  <div hlmDialogHeader>
+    <h2 hlmDialogTitle class="text-lg">Add Student</h2>
+  </div>
+
+  <form class="flex flex-col gap-3" (ngSubmit)="save()">
+    <!-- ID Number -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="idNumber">ID Number</label>
+      <input
+        hlmInput
+        id="idNumber"
+        class="w-full"
+        [ngModel]="idNumber()"
+        (ngModelChange)="idNumber.set($event)"
+        name="idNumber"
+      />
+    </div>
+
+    <!-- Name -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="name">Name</label>
+      <input
+        hlmInput
+        id="name"
+        class="w-full"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="name"
+      />
+    </div>
+
+    <!-- RFID -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="rfid" class="flex items-center gap-1.5">
+        RFID
+        @if (rfid()) {
+          <ng-icon name="lucideCheck" class="text-base text-emerald-600" />
+        }
+      </label>
+      <div class="relative">
+        <ng-icon
+          name="lucideScanLine"
+          class="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto text-base"
+        />
+        <input
+          hlmInput
+          #rfidInput
+          id="rfid"
+          class="w-full pl-9"
+          [ngModel]="rfid()"
+          (ngModelChange)="rfid.set($event)"
+          (keydown.enter)="onRfidEnter($event)"
+          name="rfid"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <!-- Department -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="department">Department</label>
+      <input
+        hlmInput
+        id="department"
+        class="w-full"
+        [ngModel]="department()"
+        (ngModelChange)="department.set($event)"
+        name="department"
+      />
+    </div>
+
+    <!-- Course -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="course">Course</label>
+      <input
+        hlmInput
+        id="course"
+        class="w-full"
+        [ngModel]="course()"
+        (ngModelChange)="course.set($event)"
+        name="course"
+      />
+    </div>
+
+    <!-- School -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="school">School</label>
+      <input
+        hlmInput
+        id="school"
+        class="w-full"
+        [ngModel]="school()"
+        (ngModelChange)="school.set($event)"
+        name="school"
+      />
+    </div>
+
+    <!-- Image -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="image">Image</label>
+      <input
+        #fileInput
+        id="image"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        (change)="onFileChange($event)"
+      />
+      <div
+        class="flex items-center gap-4 rounded-lg border border-dashed p-4 transition-colors"
+        [class.border-primary]="dragging()"
+        [class.bg-muted]="dragging()"
+        [class.border-border]="!dragging()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
+        @if (imagePreview()) {
+          <img
+            [src]="imagePreview()"
+            alt="Preview"
+            class="border-border h-20 w-20 shrink-0 rounded-md border object-cover"
+          />
+        } @else {
+          <div
+            class="border-border text-muted-foreground flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-dashed"
+          >
+            <ng-icon name="lucideImage" class="text-2xl" />
+          </div>
+        }
+        <div class="flex min-w-0 flex-col gap-1.5">
+          <p class="text-muted-foreground text-sm">
+            Drag &amp; drop an image here, or
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" hlmBtn variant="outline" size="sm" class="gap-1.5" (click)="fileInput.click()">
+              <ng-icon name="lucideUpload" class="text-base" />
+              Choose Image
+            </button>
+            @if (imagePreview()) {
+              <button type="button" hlmBtn variant="ghost" size="sm" class="text-destructive gap-1.5" (click)="clearImage()">
+                <ng-icon name="lucideX" class="text-base" />
+                Remove
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (error()) {
+      <p class="text-destructive text-sm">{{ error() }}</p>
+    }
+
+    <!-- Footer -->
+    <div class="mt-2 flex justify-end gap-2">
+      <button type="button" hlmBtn variant="outline" (click)="cancel()" [disabled]="saving()">
+        Cancel
+      </button>
+      <button type="submit" hlmBtn class="gap-1.5" [disabled]="saving()">
+        @if (saving()) {
+          <ng-icon name="lucideLoaderCircle" class="animate-spin text-base" />
+          Saving…
+        } @else {
+          Add Student
+        }
+      </button>
+    </div>
+  </form>
+</div>

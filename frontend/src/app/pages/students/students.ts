@@ -21,8 +21,10 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { AddStudentDialog } from './add-student-dialog';
 import {
   type ColumnDef,
   type RowSelectionState,
@@ -71,6 +73,7 @@ import { type Student, StudentsStore } from './students.store';
 })
 export class Students {
   private readonly store = inject(StudentsStore);
+  private readonly dialog = inject(HlmDialogService);
   protected readonly data = this.store.students;
 
   protected readonly sorting = signal<SortingState>([]);
@@ -121,6 +124,14 @@ export class Students {
     if (state === 'asc') return 'lucideChevronUp';
     if (state === 'desc') return 'lucideChevronDown';
     return 'lucideChevronsUpDown';
+  }
+
+  protected openAddStudent(): void {
+    this.dialog.open(AddStudentDialog, { contentClass: 'w-full sm:max-w-md' });
+  }
+
+  protected refresh(): void {
+    this.store.load();
   }
 
   protected initials(name: string): string {
