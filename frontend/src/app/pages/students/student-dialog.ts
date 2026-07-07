@@ -18,15 +18,15 @@ import {
   lucideUpload,
   lucideX,
 } from '@ng-icons/lucide';
-import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { StudentsStore } from './students.store';
+import { Student, StudentsStore } from './students.store';
 
 @Component({
-  selector: 'app-add-student-dialog',
+  selector: 'app-student-dialog',
   imports: [FormsModule, NgIcon, HlmButton, HlmInput, HlmLabel, HlmDialogHeader, HlmDialogTitle],
   viewProviders: [
     provideIcons({
@@ -38,11 +38,16 @@ import { StudentsStore } from './students.store';
       lucideLoaderCircle,
     }),
   ],
-  templateUrl: './add-student-dialog.html',
+  templateUrl: './student-dialog.html',
 })
-export class AddStudentDialog {
+export class StudentDialog {
   private readonly store = inject(StudentsStore);
   private readonly dialogRef = inject(BrnDialogRef);
+  private readonly context = injectBrnDialogContext<{ student?: Student }>();
+
+  // Present when opened from the edit action; drives edit vs. add behaviour.
+  protected readonly editingStudent = this.context?.student ?? null;
+  protected readonly editing = !!this.editingStudent;
 
   // Fields in the required order.
   protected readonly idNumber = signal('');
@@ -70,6 +75,18 @@ export class AddStudentDialog {
   private leakEl: HTMLInputElement | HTMLTextAreaElement | null = null;
 
   constructor() {
+    // Prefill the form when editing an existing student.
+    const s = this.editingStudent;
+    if (s) {
+      this.idNumber.set(s.studentNo);
+      this.name.set(s.name);
+      this.rfid.set(s.rfid ?? '');
+      this.department.set(s.department);
+      this.course.set(s.course);
+      this.school.set(s.school);
+      this.imagePreview.set(s.photo ?? null);
+    }
+
     // The RFID reader is a keyboard-wedge device: focusing the RFID input on
     // open lets a scan type straight into it.
     afterNextRender(() => this.rfidInput()?.nativeElement.focus());
@@ -90,7 +107,7 @@ export class AddStudentDialog {
     const rfidEl = this.rfidInput()?.nativeElement ?? null;
 
     if (event.key === 'Enter') {
-      if (this.scanBuffer.length >= AddStudentDialog.MIN_SCAN_LEN) {
+      if (this.scanBuffer.length >= StudentDialog.MIN_SCAN_LEN) {
         this.rfid.set(this.scanBuffer);
         if (this.leakEl && this.leakEl !== rfidEl) {
           this.leakEl.value = this.leakEl.value.slice(0, -1);
@@ -110,7 +127,7 @@ export class AddStudentDialog {
     const dt = now - this.lastKeyTime;
     this.lastKeyTime = now;
 
-    if (dt < AddStudentDialog.FAST_KEY_MS) {
+    if (dt < StudentDialog.FAST_KEY_MS) {
       // Machine-speed key: block it from the focused field, buffer it.
       this.scanBuffer += event.key;
       event.preventDefault();
@@ -179,31 +196,34 @@ export class AddStudentDialog {
       return;
     }
 
+    const input = {
+      idNumber: this.idNumber().trim(),
+      name: this.name().trim(),
+      rfid: this.rfid().trim(),
+      department: this.department().trim(),
+      course: this.course().trim(),
+      school: this.school().trim(),
+      image: this.image(),
+    };
+
+    const editing = this.editingStudent;
     this.saving.set(true);
-    this.store
-      .add({
-        idNumber: this.idNumber().trim(),
-        name: this.name().trim(),
-        rfid: this.rfid().trim(),
-        department: this.department().trim(),
-        course: this.course().trim(),
-        school: this.school().trim(),
-        image: this.image(),
-      })
-      .subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.dialogRef.close('created');
-        },
-        error: (err: HttpErrorResponse) => {
-          this.saving.set(false);
-          this.error.set(
-            typeof err.error === 'string' && err.error
-              ? err.error
-              : 'Failed to add student. Please try again.',
-          );
-        },
-      });
+    const request$ = editing ? this.store.update(editing.id, input) : this.store.add(input);
+
+    request$.subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.dialogRef.close(editing ? 'updated' : 'created');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(
+          typeof err.error === 'string' && err.error
+            ? err.error
+            : `Failed to ${editing ? 'update' : 'add'} student. Please try again.`,
+        );
+      },
+    });
   }
 
   protected cancel(): void {

@@ -88,6 +88,29 @@ export class StudentsStore {
       );
   }
 
+  update(id: string, input: NewStudent): Observable<StudentResponse> {
+    const form = new FormData();
+    form.append('idNumber', input.idNumber);
+    form.append('name', input.name);
+    form.append('rfid', input.rfid);
+    form.append('department', input.department);
+    form.append('course', input.course);
+    form.append('school', input.school);
+    if (input.image) {
+      form.append('image', input.image);
+    }
+
+    return this.http
+      .put<StudentResponse>(`${this.apiUrl}/students/${id}`, form)
+      .pipe(
+        tap((updated) => {
+          this.students.update((list) =>
+            list.map((s) => (s.id === id ? this.toStudent(updated) : s)),
+          );
+        }),
+      );
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/students/${id}`).pipe(
       tap(() => {

@@ -24,7 +24,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { HlmTableImports } from '@spartan-ng/helm/table';
-import { AddStudentDialog } from './add-student-dialog';
+import { StudentDialog } from './student-dialog';
 import {
   type ColumnDef,
   type RowSelectionState,
@@ -127,7 +127,14 @@ export class Students {
   }
 
   protected openAddStudent(): void {
-    this.dialog.open(AddStudentDialog, { contentClass: 'w-full sm:max-w-md' });
+    this.dialog.open(StudentDialog, { contentClass: 'w-full sm:max-w-md' });
+  }
+
+  protected openEditStudent(student: Student): void {
+    this.dialog.open(StudentDialog, {
+      context: { student },
+      contentClass: 'w-full sm:max-w-md',
+    });
   }
 
   protected refresh(): void {

@@ -135,7 +135,14 @@
                       >
                         <ng-icon name="lucideClock" class="text-base" />
                       </button>
-                      <button hlmBtn size="icon" variant="ghost" class="hover:bg-background" aria-label="Edit student">
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="ghost"
+                        class="hover:bg-background"
+                        aria-label="Edit student"
+                        (click)="openEditStudent(row.original)"
+                      >
                         <ng-icon name="lucidePencil" class="text-base" />
                       </button>
                       <button

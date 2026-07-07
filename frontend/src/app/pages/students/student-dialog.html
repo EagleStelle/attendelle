@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-4">
   <div hlmDialogHeader>
-    <h2 hlmDialogTitle class="text-lg">Add Student</h2>
+    <h2 hlmDialogTitle class="text-lg">{{ editing ? 'Edit Student' : 'Add Student' }}</h2>
   </div>
 
   <form class="flex flex-col gap-3" (ngSubmit)="save()">
@@ -163,7 +163,7 @@
           <ng-icon name="lucideLoaderCircle" class="animate-spin text-base" />
           Saving…
         } @else {
-          Add Student
+          {{ editing ? 'Save Changes' : 'Add Student' }}
         }
       </button>
     </div>
