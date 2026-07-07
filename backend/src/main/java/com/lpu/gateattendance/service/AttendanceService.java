@@ -9,6 +9,7 @@ import com.lpu.gateattendance.model.LogType;
 import com.lpu.gateattendance.model.Role;
 import com.lpu.gateattendance.repository.AppUserRepository;
 import com.lpu.gateattendance.repository.AttendanceLogRepository;
+import com.lpu.gateattendance.repository.StudentFieldValueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class AttendanceService {
 
     private final AppUserRepository userRepository;
     private final AttendanceLogRepository logRepository;
+    private final StudentFieldValueRepository fieldValueRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TIME_FMT =
@@ -85,6 +87,7 @@ public class AttendanceService {
      * One row per student per day. timeIn is the earliest scan of the day;
      * timeOut is the latest scan of the day, or null when there was only one.
      */
+    @Transactional(readOnly = true)
     public List<AttendanceRecordResponse> listRecords() {
         List<AttendanceLog> logs = logRepository.findByUser_RoleOrderByTimestampAsc(Role.STUDENT);
 
@@ -95,6 +98,9 @@ public class AttendanceService {
             groups.computeIfAbsent(key, k -> new ArrayList<>()).add(log);
         }
 
+        // Cache each student's configurable-field values so we query at most once per student.
+        Map<java.util.UUID, Map<String, String>> valuesByUser = new java.util.HashMap<>();
+
         List<AttendanceRecordResponse> records = new ArrayList<>();
         for (List<AttendanceLog> group : groups.values()) {
             AttendanceLog first = group.get(0);
@@ -102,14 +108,14 @@ public class AttendanceService {
             AppUser user = first.getUser();
             LocalDate date = first.getTimestamp().toLocalDate();
 
+            Map<String, String> fieldValues = valuesByUser.computeIfAbsent(user.getId(), this::loadFieldValues);
+
             records.add(AttendanceRecordResponse.builder()
                     .id(user.getId() + "-" + date)
                     .name(fullName(user))
                     .studentNo(user.getSchoolId())
                     .photo(user.getPhotoUrl())
-                    .department(user.getDepartment())
-                    .course(user.getCourse())
-                    .school(user.getSchool())
+                    .fieldValues(fieldValues)
                     .date(date.format(DATE_FMT))
                     .timeIn(fmtTime(first.getTimestamp()))
                     .timeOut(group.size() > 1 ? fmtTime(last.getTimestamp()) : null)
@@ -119,6 +125,13 @@ public class AttendanceService {
         // Newest first.
         records.sort((a, b) -> b.getDate().compareTo(a.getDate()));
         return records;
+    }
+
+    private Map<String, String> loadFieldValues(java.util.UUID userId) {
+        Map<String, String> values = new java.util.HashMap<>();
+        fieldValueRepository.findByUserId(userId)
+                .forEach(v -> values.put(v.getField().getId().toString(), v.getValue()));
+        return values;
     }
 
     private String fmtTime(LocalDateTime ts) {

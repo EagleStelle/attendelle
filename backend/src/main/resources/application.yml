@@ -3,7 +3,7 @@ spring:
     name: gate-attendance
 
   datasource:
-    url: jdbc:h2:file:./data/attendance-db
+    url: jdbc:h2:file:./data/attendance-db;AUTO_SERVER=TRUE
     driverClassName: org.h2.Driver
     username: sa
     password: password

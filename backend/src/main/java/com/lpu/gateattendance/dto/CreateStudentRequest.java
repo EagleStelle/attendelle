@@ -16,11 +16,9 @@ public class CreateStudentRequest {
     // Optional: populated by the RFID reader while the Add Student form is open.
     private String rfid;
 
-    private String department;
-
-    private String course;
-
-    private String school;
+    // JSON object mapping custom-field id -> selected value, e.g.
+    // {"<fieldId>":"CCS","<fieldId>":"BSCS"}. Sent as a multipart form field.
+    private String fieldValues;
 
     // Optional uploaded photo. The file is stored on disk and only its path
     // is persisted to the database.

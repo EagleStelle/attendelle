@@ -3,6 +3,8 @@ package com.lpu.gateattendance.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 @Builder
 public class StudentResponse {
@@ -10,8 +12,7 @@ public class StudentResponse {
     private String name;
     private String studentNo;
     private String rfid;
-    private String department;
-    private String course;
-    private String school;
+    // Custom-field id -> selected value for this student.
+    private Map<String, String> fieldValues;
     private String photo;
 }

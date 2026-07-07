@@ -1,17 +1,25 @@
 package com.lpu.gateattendance.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lpu.gateattendance.dto.CreateStudentRequest;
 import com.lpu.gateattendance.dto.StudentResponse;
 import com.lpu.gateattendance.model.AppUser;
+import com.lpu.gateattendance.model.CustomField;
 import com.lpu.gateattendance.model.Role;
+import com.lpu.gateattendance.model.StudentFieldValue;
 import com.lpu.gateattendance.repository.AppUserRepository;
 import com.lpu.gateattendance.repository.AttendanceLogRepository;
+import com.lpu.gateattendance.repository.CustomFieldRepository;
+import com.lpu.gateattendance.repository.StudentFieldValueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -21,7 +29,11 @@ public class StudentService {
     private final AppUserRepository userRepository;
     private final AttendanceLogRepository logRepository;
     private final FileStorageService fileStorageService;
+    private final StudentFieldValueRepository fieldValueRepository;
+    private final CustomFieldRepository fieldRepository;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Transactional(readOnly = true)
     public List<StudentResponse> listStudents() {
         return userRepository.findByRoleOrderByLastNameAscFirstNameAsc(Role.STUDENT)
                 .stream()
@@ -50,13 +62,12 @@ public class StudentService {
                 .lastName(name[0])
                 .role(Role.STUDENT)
                 .rfidTag(rfid)
-                .department(blankToNull(request.getDepartment()))
-                .course(blankToNull(request.getCourse()))
-                .school(blankToNull(request.getSchool()))
                 .photoUrl(photoPath)
                 .build();
 
-        return toResponse(userRepository.save(student));
+        AppUser saved = userRepository.save(student);
+        saveFieldValues(saved, parseFieldValues(request.getFieldValues()));
+        return toResponse(saved);
     }
 
     @Transactional
@@ -86,9 +97,6 @@ public class StudentService {
         student.setFirstName(name[1]);
         student.setLastName(name[0]);
         student.setRfidTag(rfid);
-        student.setDepartment(blankToNull(request.getDepartment()));
-        student.setCourse(blankToNull(request.getCourse()));
-        student.setSchool(blankToNull(request.getSchool()));
 
         // Only replace the photo when a new file is uploaded; otherwise keep it.
         MultipartFile image = request.getImage();
@@ -98,7 +106,12 @@ public class StudentService {
             fileStorageService.deleteStudentPhoto(oldPhoto);
         }
 
-        return toResponse(userRepository.save(student));
+        AppUser saved = userRepository.save(student);
+        // Replace the whole set of values with the submitted ones.
+        fieldValueRepository.deleteByUserId(id);
+        fieldValueRepository.flush();
+        saveFieldValues(saved, parseFieldValues(request.getFieldValues()));
+        return toResponse(saved);
     }
 
     @Transactional
@@ -107,21 +120,54 @@ public class StudentService {
                 .filter(u -> u.getRole() == Role.STUDENT)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
-        // Remove attendance logs first (FK user_id is NOT NULL, no DB cascade).
+        // Remove dependent rows first (FKs are NOT NULL, no DB cascade).
+        fieldValueRepository.deleteByUserId(id);
         logRepository.deleteByUserId(id);
         userRepository.delete(student);
         fileStorageService.deleteStudentPhoto(student.getPhotoUrl());
     }
 
+    // Persists one StudentFieldValue per submitted, non-blank entry whose field id
+    // resolves to an existing CustomField. Unknown or blank entries are skipped.
+    private void saveFieldValues(AppUser student, Map<String, String> values) {
+        values.forEach((fieldId, value) -> {
+            String trimmed = blankToNull(value);
+            if (trimmed == null) return;
+            CustomField field;
+            try {
+                field = fieldRepository.findById(UUID.fromString(fieldId)).orElse(null);
+            } catch (IllegalArgumentException e) {
+                field = null; // malformed id
+            }
+            if (field == null) return;
+            fieldValueRepository.save(StudentFieldValue.builder()
+                    .user(student)
+                    .field(field)
+                    .value(trimmed)
+                    .build());
+        });
+    }
+
+    private Map<String, String> parseFieldValues(String json) {
+        if (json == null || json.isBlank()) return Map.of();
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, String>>() {});
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid field values payload.");
+        }
+    }
+
     private StudentResponse toResponse(AppUser user) {
+        Map<String, String> values = new HashMap<>();
+        fieldValueRepository.findByUserId(user.getId())
+                .forEach(v -> values.put(v.getField().getId().toString(), v.getValue()));
+
         return StudentResponse.builder()
                 .id(user.getId().toString())
                 .name(fullName(user))
                 .studentNo(user.getSchoolId())
                 .rfid(user.getRfidTag())
-                .department(user.getDepartment())
-                .course(user.getCourse())
-                .school(user.getSchool())
+                .fieldValues(values)
                 .photo(user.getPhotoUrl())
                 .build();
     }
