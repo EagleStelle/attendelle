@@ -1,0 +1,88 @@
+<div class="flex w-full flex-col gap-4">
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="relative min-w-0 flex-1">
+      <ng-icon name="lucidePlus"
+        class="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto text-base" />
+      <input hlmInput id="newField" class="w-full pl-9" placeholder="New column name, e.g. Department"
+        [ngModel]="newFieldName()" (ngModelChange)="newFieldName.set($event)" (keydown.enter)="addField()" />
+    </div>
+    <button hlmBtn class="gap-1.5" (click)="addField()">
+      <ng-icon name="lucidePlus" class="text-base" />
+      New
+    </button>
+  </div>
+
+  <!-- Columns -->
+  <div class="flex flex-col gap-4">
+    @for (field of fields(); track field.id; let i = $index) {
+    <section hlmCard class="flex flex-col gap-4 p-4">
+      <!-- Header -->
+      <div hlmCardHeader class="flex flex-row items-center gap-2 space-y-0 p-0">
+        <!-- Reorder -->
+        <div class="flex flex-col">
+          <button hlmBtn size="icon" variant="ghost" class="h-5 w-6" [disabled]="i === 0" (click)="move(i, -1)"
+            aria-label="Move up">
+            <ng-icon name="lucideChevronUp" class="text-sm" />
+          </button>
+          <button hlmBtn size="icon" variant="ghost" class="h-5 w-6" [disabled]="i === fields().length - 1"
+            (click)="move(i, 1)" aria-label="Move down">
+            <ng-icon name="lucideChevronDown" class="text-sm" />
+          </button>
+        </div>
+
+        @if (editingId() === field.id) {
+        <input hlmInput class="flex-1" [ngModel]="editName()" (ngModelChange)="editName.set($event)"
+          (keydown.enter)="saveEdit()" (keydown.escape)="cancelEdit()" />
+        <button hlmBtn size="icon" variant="ghost" (click)="saveEdit()" aria-label="Save">
+          <ng-icon name="lucideCheck" class="text-base text-emerald-600" />
+        </button>
+        <button hlmBtn size="icon" variant="ghost" (click)="cancelEdit()" aria-label="Cancel">
+          <ng-icon name="lucideX" class="text-base" />
+        </button>
+        } @else {
+        <h3 hlmCardTitle class="flex-1 truncate text-base">{{ field.name }}</h3>
+        <button hlmBtn size="icon" variant="ghost" (click)="startEdit(field)" aria-label="Rename column">
+          <ng-icon name="lucidePencil" class="text-base" />
+        </button>
+        <button hlmBtn size="icon" variant="ghost" class="text-destructive hover:text-destructive"
+          (click)="deleteField(field)" aria-label="Delete column">
+          <ng-icon name="lucideTrash2" class="text-base" />
+        </button>
+        }
+      </div>
+
+      <div hlmCardContent class="flex flex-col gap-4 p-0 pl-8">
+        <!-- Options -->
+        <div class="flex flex-wrap items-center gap-2">
+          @for (opt of field.options; track opt.id) {
+          <span class="bg-muted text-foreground inline-flex items-center gap-1 rounded-full py-1 pl-3 pr-1 text-xs">
+            {{ opt.value }}
+            <button type="button" class="hover:bg-background/80 flex size-4 items-center justify-center rounded-full"
+              (click)="deleteOption(opt.id)" aria-label="Remove option">
+              <ng-icon name="lucideX" class="text-xs" />
+            </button>
+          </span>
+          } @empty {
+          <span class="text-muted-foreground text-xs">No options yet.</span>
+          }
+        </div>
+
+        <!-- Add option -->
+        <div class="flex items-center gap-2">
+          <input hlmInput class="flex-1" placeholder="Add an option" [ngModel]="optionInput(field.id)"
+            (ngModelChange)="setOptionInput(field.id, $event)" (keydown.enter)="addOption(field)" />
+          <button hlmBtn variant="outline" class="gap-1.5" (click)="addOption(field)">
+            <ng-icon name="lucidePlus" class="text-sm" />
+            Add
+          </button>
+        </div>
+      </div>
+    </section>
+    } @empty {
+    <div class="text-muted-foreground rounded-lg border border-dashed py-10 text-center text-sm">
+      No columns yet. Add one above to start.
+    </div>
+    }
+  </div>
+</div>

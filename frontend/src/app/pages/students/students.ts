@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -35,6 +35,7 @@ import {
   getSortedRowModel,
 } from '@tanstack/angular-table';
 import { infiniteScroll } from '../../shared/infinite-scroll';
+import { FieldsStore } from '../../shared/fields/fields.store';
 import { type Student, StudentsStore } from './students.store';
 
 @Component({
@@ -73,6 +74,7 @@ import { type Student, StudentsStore } from './students.store';
 })
 export class Students {
   private readonly store = inject(StudentsStore);
+  private readonly fieldsStore = inject(FieldsStore);
   private readonly dialog = inject(HlmDialogService);
   protected readonly data = this.store.students;
 
@@ -81,19 +83,26 @@ export class Students {
   protected readonly rowSelection = signal<RowSelectionState>({});
   protected readonly scroll = infiniteScroll();
 
-  private readonly columns: ColumnDef<Student>[] = [
-    { id: 'select', enableSorting: false },
-    { accessorKey: 'name', header: 'Name' },
-    { accessorKey: 'rfid', header: 'RFID #' },
-    { accessorKey: 'department', header: 'Department' },
-    { accessorKey: 'course', header: 'Course' },
-    { accessorKey: 'school', header: 'School' },
-    { id: 'actions', header: 'Action', enableSorting: false },
-  ];
+  // Columns are driven by the admin-configured fields, sandwiched between the
+  // fixed leading (select/name/rfid) and trailing (actions) columns.
+  private readonly columns = computed<ColumnDef<Student>[]>(() => {
+    const fieldColumns: ColumnDef<Student>[] = this.fieldsStore.fields().map((f) => ({
+      id: f.id,
+      header: f.name,
+      accessorFn: (row: Student) => row.fieldValues[f.id] ?? '',
+    }));
+    return [
+      { id: 'select', enableSorting: false },
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'rfid', header: 'RFID #' },
+      ...fieldColumns,
+      { id: 'actions', header: 'Action', enableSorting: false },
+    ];
+  });
 
   protected readonly table = createAngularTable<Student>(() => ({
     data: this.data(),
-    columns: this.columns,
+    columns: this.columns(),
     state: {
       sorting: this.sorting(),
       globalFilter: this.globalFilter(),

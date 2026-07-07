@@ -57,44 +57,18 @@
       </div>
     </div>
 
-    <!-- Department -->
-    <div class="flex flex-col gap-1">
-      <label hlmLabel for="department">Department</label>
-      <input
-        hlmInput
-        id="department"
-        class="w-full"
-        [ngModel]="department()"
-        (ngModelChange)="department.set($event)"
-        name="department"
-      />
-    </div>
-
-    <!-- Course -->
-    <div class="flex flex-col gap-1">
-      <label hlmLabel for="course">Course</label>
-      <input
-        hlmInput
-        id="course"
-        class="w-full"
-        [ngModel]="course()"
-        (ngModelChange)="course.set($event)"
-        name="course"
-      />
-    </div>
-
-    <!-- School -->
-    <div class="flex flex-col gap-1">
-      <label hlmLabel for="school">School</label>
-      <input
-        hlmInput
-        id="school"
-        class="w-full"
-        [ngModel]="school()"
-        (ngModelChange)="school.set($event)"
-        name="school"
-      />
-    </div>
+    <!-- Configurable columns -->
+    @for (field of fields(); track field.id) {
+      <div class="flex flex-col gap-1">
+        <label hlmLabel>{{ field.name }}</label>
+        <app-field-combobox
+          [options]="optionValues(field)"
+          [placeholder]="'Select ' + field.name.toLowerCase()"
+          [value]="fieldValue(field.id)"
+          (valueChange)="setFieldValue(field.id, $event)"
+        />
+      </div>
+    }
 
     <!-- Image -->
     <div class="flex flex-col gap-1">

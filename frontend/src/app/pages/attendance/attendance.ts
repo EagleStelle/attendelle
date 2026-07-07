@@ -26,6 +26,7 @@ import {
   getSortedRowModel,
 } from '@tanstack/angular-table';
 import { infiniteScroll } from '../../shared/infinite-scroll';
+import { FieldsStore } from '../../shared/fields/fields.store';
 import { type AttendanceRecord, AttendanceStore } from './attendance.store';
 
 @Component({
@@ -56,6 +57,7 @@ import { type AttendanceRecord, AttendanceStore } from './attendance.store';
 })
 export class Attendance {
   private readonly store = inject(AttendanceStore);
+  private readonly fieldsStore = inject(FieldsStore);
 
   protected readonly startDate = signal('');
   protected readonly endDate = signal('');
@@ -72,20 +74,26 @@ export class Attendance {
       .filter((r) => (!start || r.date >= start) && (!end || r.date <= end));
   });
 
-  private readonly columns: ColumnDef<AttendanceRecord>[] = [
-    { id: 'select', enableSorting: false },
-    { accessorKey: 'name', header: 'Names' },
-    { accessorKey: 'department', header: 'Department' },
-    { accessorKey: 'course', header: 'Course' },
-    { accessorKey: 'school', header: 'School' },
-    { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'timeIn', header: 'Time in' },
-    { accessorKey: 'timeOut', header: 'Time out' },
-  ];
+  // Configurable columns mirror the students table, sat between Names and Date.
+  private readonly columns = computed<ColumnDef<AttendanceRecord>[]>(() => {
+    const fieldColumns: ColumnDef<AttendanceRecord>[] = this.fieldsStore.fields().map((f) => ({
+      id: f.id,
+      header: f.name,
+      accessorFn: (row: AttendanceRecord) => row.fieldValues[f.id] ?? '',
+    }));
+    return [
+      { id: 'select', enableSorting: false },
+      { accessorKey: 'name', header: 'Names' },
+      ...fieldColumns,
+      { accessorKey: 'date', header: 'Date' },
+      { accessorKey: 'timeIn', header: 'Time in' },
+      { accessorKey: 'timeOut', header: 'Time out' },
+    ];
+  });
 
   protected readonly table = createAngularTable<AttendanceRecord>(() => ({
     data: this.dateFiltered(),
-    columns: this.columns,
+    columns: this.columns(),
     state: {
       sorting: this.sorting(),
       globalFilter: this.globalFilter(),

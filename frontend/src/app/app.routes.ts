@@ -6,6 +6,7 @@ import { Dashboard } from './pages/dashboard/dashboard';
 import { Students } from './pages/students/students';
 import { AttendanceLogs } from './pages/students/attendance-logs';
 import { Attendance } from './pages/attendance/attendance';
+import { Manage } from './pages/manage/manage';
 import { Placeholder } from './pages/placeholder/placeholder';
 import { authGuard } from './shared/auth/auth.guard';
 
@@ -24,6 +25,7 @@ export const routes: Routes = [
         children: [{ path: ':id/logs', component: AttendanceLogs }],
       },
       { path: 'attendance', component: Attendance },
+      { path: 'manage', component: Manage },
       {
         path: 'deleted-students',
         component: Placeholder,

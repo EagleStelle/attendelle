@@ -23,11 +23,22 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
+import { Field, FieldsStore } from '../../shared/fields/fields.store';
+import { FieldCombobox } from '../../shared/fields/field-combobox';
 import { Student, StudentsStore } from './students.store';
 
 @Component({
   selector: 'app-student-dialog',
-  imports: [FormsModule, NgIcon, HlmButton, HlmInput, HlmLabel, HlmDialogHeader, HlmDialogTitle],
+  imports: [
+    FormsModule,
+    NgIcon,
+    HlmButton,
+    HlmInput,
+    HlmLabel,
+    HlmDialogHeader,
+    HlmDialogTitle,
+    FieldCombobox,
+  ],
   viewProviders: [
     provideIcons({
       lucideScanLine,
@@ -42,6 +53,7 @@ import { Student, StudentsStore } from './students.store';
 })
 export class StudentDialog {
   private readonly store = inject(StudentsStore);
+  private readonly fieldsStore = inject(FieldsStore);
   private readonly dialogRef = inject(BrnDialogRef);
   private readonly context = injectBrnDialogContext<{ student?: Student }>();
 
@@ -49,13 +61,15 @@ export class StudentDialog {
   protected readonly editingStudent = this.context?.student ?? null;
   protected readonly editing = !!this.editingStudent;
 
+  // Admin-configured columns rendered as comboboxes.
+  protected readonly fields = this.fieldsStore.fields;
+
   // Fields in the required order.
   protected readonly idNumber = signal('');
   protected readonly name = signal('');
   protected readonly rfid = signal('');
-  protected readonly department = signal('');
-  protected readonly course = signal('');
-  protected readonly school = signal('');
+  // Configurable-column selections, keyed by field id.
+  protected readonly fieldValues = signal<Record<string, string>>({});
   protected readonly image = signal<File | null>(null);
   protected readonly imagePreview = signal<string | null>(null);
   protected readonly dragging = signal(false);
@@ -81,9 +95,7 @@ export class StudentDialog {
       this.idNumber.set(s.studentNo);
       this.name.set(s.name);
       this.rfid.set(s.rfid ?? '');
-      this.department.set(s.department);
-      this.course.set(s.course);
-      this.school.set(s.school);
+      this.fieldValues.set({ ...s.fieldValues });
       this.imagePreview.set(s.photo ?? null);
     }
 
@@ -149,6 +161,18 @@ export class StudentDialog {
     event.preventDefault();
   }
 
+  protected optionValues(field: Field): string[] {
+    return field.options.map((o) => o.value);
+  }
+
+  protected fieldValue(fieldId: string): string | null {
+    return this.fieldValues()[fieldId] ?? null;
+  }
+
+  protected setFieldValue(fieldId: string, value: string | null): void {
+    this.fieldValues.update((m) => ({ ...m, [fieldId]: value ?? '' }));
+  }
+
   protected onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.setImage(input.files?.[0] ?? null);
@@ -200,9 +224,7 @@ export class StudentDialog {
       idNumber: this.idNumber().trim(),
       name: this.name().trim(),
       rfid: this.rfid().trim(),
-      department: this.department().trim(),
-      course: this.course().trim(),
-      school: this.school().trim(),
+      fieldValues: this.fieldValues(),
       image: this.image(),
     };
 

@@ -17,6 +17,7 @@ import {
   lucideLayoutDashboard,
   lucideLogOut,
   lucidePanelLeft,
+  lucideSettings,
   lucideUserRound,
   lucideUsers,
   lucideUserX,
@@ -58,6 +59,7 @@ interface NavItem {
       lucideGraduationCap,
       lucideUserRound,
       lucideLogOut,
+      lucideSettings,
     }),
   ],
   templateUrl: './admin-layout.html',
@@ -69,6 +71,7 @@ export class AdminLayout {
     { label: 'Dashboard', icon: 'lucideLayoutDashboard', route: '/dashboard' },
     { label: 'Students', icon: 'lucideUsers', route: '/students' },
     { label: 'Attendance', icon: 'lucideClock', route: '/attendance' },
+    { label: 'Manage', icon: 'lucideSettings', route: '/manage' },
     { label: 'Deleted Students', icon: 'lucideUserX', route: '/deleted-students' },
   ];
 

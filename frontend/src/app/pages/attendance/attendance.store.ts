@@ -8,9 +8,8 @@ export interface AttendanceRecord {
   name: string;
   studentNo: string;
   photo?: string;
-  department: string;
-  course: string;
-  school: string;
+  // Configurable-column values, keyed by field id.
+  fieldValues: Record<string, string>;
   date: string;
   timeIn: string;
   timeOut: string | null;
@@ -22,9 +21,7 @@ interface AttendanceRecordResponse {
   name: string;
   studentNo: string;
   photo: string | null;
-  department: string | null;
-  course: string | null;
-  school: string | null;
+  fieldValues: Record<string, string> | null;
   date: string;
   timeIn: string;
   timeOut: string | null;
@@ -91,9 +88,7 @@ export class AttendanceStore {
       name: r.name,
       studentNo: r.studentNo,
       photo: this.photoUrl(r.photo),
-      department: r.department ?? '',
-      course: r.course ?? '',
-      school: r.school ?? '',
+      fieldValues: r.fieldValues ?? {},
       date: r.date,
       timeIn: r.timeIn,
       timeOut: r.timeOut,

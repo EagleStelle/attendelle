@@ -9,9 +9,8 @@ export interface Student {
   studentNo: string;
   photo?: string;
   rfid: string | null;
-  department: string;
-  course: string;
-  school: string;
+  // Configurable-column values, keyed by field id.
+  fieldValues: Record<string, string>;
 }
 
 /** Shape returned by GET /api/students. */
@@ -20,9 +19,7 @@ interface StudentResponse {
   name: string;
   studentNo: string;
   rfid: string | null;
-  department: string | null;
-  course: string | null;
-  school: string | null;
+  fieldValues: Record<string, string> | null;
   photo: string | null;
 }
 
@@ -31,9 +28,7 @@ export interface NewStudent {
   idNumber: string;
   name: string;
   rfid: string;
-  department: string;
-  course: string;
-  school: string;
+  fieldValues: Record<string, string>;
   image: File | null;
 }
 
@@ -68,16 +63,7 @@ export class StudentsStore {
   }
 
   add(input: NewStudent): Observable<StudentResponse> {
-    const form = new FormData();
-    form.append('idNumber', input.idNumber);
-    form.append('name', input.name);
-    form.append('rfid', input.rfid);
-    form.append('department', input.department);
-    form.append('course', input.course);
-    form.append('school', input.school);
-    if (input.image) {
-      form.append('image', input.image);
-    }
+    const form = this.toFormData(input);
 
     return this.http
       .post<StudentResponse>(`${this.apiUrl}/students`, form)
@@ -89,16 +75,7 @@ export class StudentsStore {
   }
 
   update(id: string, input: NewStudent): Observable<StudentResponse> {
-    const form = new FormData();
-    form.append('idNumber', input.idNumber);
-    form.append('name', input.name);
-    form.append('rfid', input.rfid);
-    form.append('department', input.department);
-    form.append('course', input.course);
-    form.append('school', input.school);
-    if (input.image) {
-      form.append('image', input.image);
-    }
+    const form = this.toFormData(input);
 
     return this.http
       .put<StudentResponse>(`${this.apiUrl}/students/${id}`, form)
@@ -123,15 +100,25 @@ export class StudentsStore {
     return this.students().find((s) => s.id === id);
   }
 
+  private toFormData(input: NewStudent): FormData {
+    const form = new FormData();
+    form.append('idNumber', input.idNumber);
+    form.append('name', input.name);
+    form.append('rfid', input.rfid);
+    form.append('fieldValues', JSON.stringify(input.fieldValues ?? {}));
+    if (input.image) {
+      form.append('image', input.image);
+    }
+    return form;
+  }
+
   private toStudent(r: StudentResponse): Student {
     return {
       id: r.id,
       name: r.name,
       studentNo: r.studentNo,
       rfid: r.rfid ?? null,
-      department: r.department ?? '',
-      course: r.course ?? '',
-      school: r.school ?? '',
+      fieldValues: r.fieldValues ?? {},
       photo: r.photo ? `${this.fileHost}${r.photo}` : undefined,
     };
   }
