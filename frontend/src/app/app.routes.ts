@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
+import { Attendelle } from './pages/attendelle/attendelle';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { Students } from './pages/students/students';
@@ -10,6 +11,7 @@ import { authGuard } from './shared/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
+  { path: 'attendelle', component: Attendelle, canActivate: [authGuard] },
   {
     path: '',
     component: AdminLayout,

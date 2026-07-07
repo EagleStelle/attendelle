@@ -1,5 +1,5 @@
-import { computed, inject, Injectable } from '@angular/core';
-import { StudentsStore } from '../students/students.store';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Student, StudentsStore } from '../students/students.store';
 
 export interface AttendanceRecord {
   id: string;
@@ -14,18 +14,82 @@ export interface AttendanceRecord {
   timeOut: string | null;
 }
 
+const pad = (n: number) => n.toString().padStart(2, '0');
+
+const fmtDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+const fmtTime = (h: number, m: number, s: number) => {
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${pad(hour)}:${pad(m)}:${pad(s)} ${period}`;
+};
+
+export type ScanResult =
+  | { status: 'in' | 'out'; student: Student; record: AttendanceRecord }
+  | { status: 'not-found'; student: null; record: null };
+
 @Injectable({ providedIn: 'root' })
 export class AttendanceStore {
   private readonly studentsStore = inject(StudentsStore);
 
-  readonly records = computed<AttendanceRecord[]>(() => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const fmtTime = (h: number, m: number, s: number) => {
-      const period = h < 12 ? 'AM' : 'PM';
-      const hour = h % 12 === 0 ? 12 : h % 12;
-      return `${pad(hour)}:${pad(m)}:${pad(s)} ${period}`;
-    };
+  // Records produced by live RFID scans on the Attendelle kiosk page.
+  private readonly scanned = signal<AttendanceRecord[]>([]);
 
+  readonly records = computed<AttendanceRecord[]>(() =>
+    [...this.scanned(), ...this.mockRecords()].sort((a, b) =>
+      a.date < b.date ? 1 : a.date > b.date ? -1 : 0,
+    ),
+  );
+
+  /**
+   * Record an RFID / ID scan. First scan of the day is a time in; every
+   * subsequent scan that day overwrites the time out with the new time.
+   */
+  scan(identifier: string): ScanResult {
+    const id = identifier.trim();
+    if (!id) return { status: 'not-found', student: null, record: null };
+
+    const student = this.studentsStore
+      .students()
+      .find((s) => s.rfid === id || s.studentNo === id);
+    if (!student) return { status: 'not-found', student: null, record: null };
+
+    const now = new Date();
+    const date = fmtDate(now);
+    const time = fmtTime(now.getHours(), now.getMinutes(), now.getSeconds());
+
+    let status: 'in' | 'out' = 'in';
+    let record!: AttendanceRecord;
+
+    this.scanned.update((list) => {
+      const idx = list.findIndex((r) => r.studentNo === student.studentNo && r.date === date);
+      if (idx === -1) {
+        status = 'in';
+        record = {
+          id: `scan-${student.id}-${date}`,
+          name: student.name,
+          studentNo: student.studentNo,
+          photo: student.photo,
+          department: student.department,
+          course: student.course,
+          school: student.school,
+          date,
+          timeIn: time,
+          timeOut: null,
+        };
+        return [record, ...list];
+      }
+      status = 'out';
+      record = { ...list[idx], timeOut: time };
+      const copy = [...list];
+      copy[idx] = record;
+      return copy;
+    });
+
+    return { status, student, record };
+  }
+
+  private readonly mockRecords = computed<AttendanceRecord[]>(() => {
     const hashSeed = (id: string) => {
       let h = 7;
       for (let i = 0; i < id.length; i++) {

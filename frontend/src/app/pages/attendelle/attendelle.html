@@ -1,0 +1,85 @@
+<div class="flex min-h-screen flex-col">
+  <header class="bg-primary text-primary-foreground flex items-center justify-center gap-4 p-4">
+    <h1 class="text-2xl font-bold">LPU-L Attendance Management System</h1>
+  </header>
+
+  <main class="bg-muted flex flex-1 items-center justify-center p-4">
+    <section class="bg-card w-full max-w-md rounded-lg border p-8 text-center shadow-sm">
+      <h2 class="text-xl font-bold">Please tap your RFID card</h2>
+      <p class="text-muted-foreground mt-1 text-sm">Tap your card to record your attendance</p>
+
+      <p class="text-primary mt-6 text-4xl font-bold tabular-nums">
+        {{ now() | date: 'hh:mm:ss a' }}
+      </p>
+      <p class="mt-1 font-semibold">
+        {{ now() | date: 'EEE' }} | {{ now() | date: 'MMMM dd, yyyy' }}
+      </p>
+
+      <!-- Avatar -->
+      <div
+        class="bg-primary/10 text-primary mx-auto mt-6 flex size-40 items-center justify-center overflow-hidden rounded-full"
+      >
+        @if (student()?.photo) {
+          <img [src]="student()!.photo" [alt]="student()!.name" class="size-full object-cover" />
+        } @else if (student()) {
+          <span class="text-4xl font-bold">{{ initials(student()!.name) }}</span>
+        } @else {
+          <ng-icon name="lucideUser" class="text-primary/60 text-8xl" />
+        }
+      </div>
+
+      <!-- Feedback -->
+      @if (feedback(); as fb) {
+        <div
+          class="mt-4 rounded p-2 text-sm font-medium"
+          [class.bg-primary/10]="fb.kind !== 'error'"
+          [class.text-primary]="fb.kind === 'in'"
+          [class.text-amber-600]="fb.kind === 'out'"
+          [class.bg-destructive/15]="fb.kind === 'error'"
+          [class.text-destructive]="fb.kind === 'error'"
+        >
+          {{ fb.text }}
+        </div>
+      }
+
+      <!-- Scan input -->
+      <form class="mt-6" (ngSubmit)="onSubmit()">
+        <div class="relative">
+          <input
+            #scanInput
+            hlmInput
+            class="w-full pr-12 text-center"
+            name="identifier"
+            placeholder="Student / Employee Number"
+            autocomplete="off"
+            autofocus
+            [ngModel]="identifier()"
+            (ngModelChange)="identifier.set($event)"
+            (blur)="focusInput()"
+            [ngModelOptions]="{ standalone: true }"
+          />
+          <button
+            hlmBtn
+            type="submit"
+            size="icon"
+            class="absolute inset-y-0 right-1 my-auto"
+            aria-label="Search"
+          >
+            <ng-icon name="lucideSearch" />
+          </button>
+        </div>
+      </form>
+
+      @if (student(); as s) {
+        <p class="mt-3 font-semibold">{{ s.name }}</p>
+        <p class="text-muted-foreground text-sm tabular-nums">{{ s.studentNo }}</p>
+      } @else {
+        <p class="text-muted-foreground mt-3 text-sm">Fullname</p>
+      }
+    </section>
+  </main>
+
+  <footer class="bg-primary text-primary-foreground flex items-center justify-center p-4">
+    <p class="text-sm">© 2026 Lyceum of the Philippines University - Laguna</p>
+  </footer>
+</div>
