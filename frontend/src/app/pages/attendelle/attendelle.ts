@@ -27,13 +27,17 @@ export class Attendelle implements OnDestroy {
   private readonly store = inject(AttendanceStore);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
+  // How long a scan result (student card or error state) stays on screen.
+  private static readonly RESULT_MS = 3000;
+
   protected readonly identifier = signal('');
   protected readonly now = signal(new Date());
   protected readonly student = signal<Student | null>(null);
-  protected readonly feedback = signal<{ kind: 'in' | 'out' | 'error'; text: string } | null>(null);
+  protected readonly error = signal(false);
 
   private readonly input = viewChild<ElementRef<HTMLInputElement>>('scanInput');
   private timer?: ReturnType<typeof setInterval>;
+  private resetTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     if (this.isBrowser) {
@@ -45,6 +49,7 @@ export class Attendelle implements OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timer) clearInterval(this.timer);
+    if (this.resetTimer) clearTimeout(this.resetTimer);
   }
 
   protected focusInput(): void {
@@ -61,16 +66,23 @@ export class Attendelle implements OnDestroy {
 
     if (result.status === 'not-found') {
       this.student.set(null);
-      this.feedback.set({ kind: 'error', text: `No record found for "${id}".` });
-      return;
+      this.error.set(true);
+    } else {
+      this.student.set(result.student);
+      this.error.set(false);
     }
 
-    this.student.set(result.student);
-    this.feedback.set(
-      result.status === 'in'
-        ? { kind: 'in', text: `Time in recorded at ${result.record.timeIn}.` }
-        : { kind: 'out', text: `Time out recorded at ${result.record.timeOut}.` },
-    );
+    this.scheduleReset();
+  }
+
+  // Clear the shown result after a few seconds, back to the idle state.
+  private scheduleReset(): void {
+    if (!this.isBrowser) return;
+    if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.resetTimer = setTimeout(() => {
+      this.student.set(null);
+      this.error.set(false);
+    }, Attendelle.RESULT_MS);
   }
 
   protected initials(name: string): string {

@@ -4,7 +4,12 @@
   </header>
 
   <main class="bg-muted flex flex-1 items-center justify-center p-4">
-    <section class="bg-card w-full max-w-md rounded-lg border p-8 text-center shadow-sm">
+    <section
+      class="w-full max-w-md rounded-lg border p-8 text-center shadow-sm transition-colors"
+      [class.bg-card]="!error()"
+      [class.bg-destructive/10]="error()"
+      [class.border-destructive]="error()"
+    >
       <h2 class="text-xl font-bold">Please tap your RFID card</h2>
       <p class="text-muted-foreground mt-1 text-sm">Tap your card to record your attendance</p>
 
@@ -27,20 +32,6 @@
           <ng-icon name="lucideUser" class="text-primary/60 text-8xl" />
         }
       </div>
-
-      <!-- Feedback -->
-      @if (feedback(); as fb) {
-        <div
-          class="mt-4 rounded p-2 text-sm font-medium"
-          [class.bg-primary/10]="fb.kind !== 'error'"
-          [class.text-primary]="fb.kind === 'in'"
-          [class.text-amber-600]="fb.kind === 'out'"
-          [class.bg-destructive/15]="fb.kind === 'error'"
-          [class.text-destructive]="fb.kind === 'error'"
-        >
-          {{ fb.text }}
-        </div>
-      }
 
       <!-- Scan input -->
       <form class="mt-6" (ngSubmit)="onSubmit()">
