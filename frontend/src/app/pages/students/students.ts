@@ -134,6 +134,14 @@ export class Students {
     this.store.load();
   }
 
+  protected deleteStudent(student: Student): void {
+    const ok = confirm(`Delete ${student.name} (${student.studentNo})? This cannot be undone.`);
+    if (!ok) return;
+    this.store.delete(student.id).subscribe({
+      error: () => alert('Failed to delete student. Please try again.'),
+    });
+  }
+
   protected initials(name: string): string {
     const parts = name.replace(',', '').trim().split(/\s+/);
     return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase();

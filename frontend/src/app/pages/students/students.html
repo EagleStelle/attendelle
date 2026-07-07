@@ -138,7 +138,14 @@
                       <button hlmBtn size="icon" variant="ghost" class="hover:bg-background" aria-label="Edit student">
                         <ng-icon name="lucidePencil" class="text-base" />
                       </button>
-                      <button hlmBtn size="icon" variant="ghost" class="text-destructive hover:text-destructive hover:bg-background" aria-label="Delete student">
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="ghost"
+                        class="text-destructive hover:text-destructive hover:bg-background"
+                        aria-label="Delete student"
+                        (click)="deleteStudent(row.original)"
+                      >
                         <ng-icon name="lucideTrash2" class="text-base" />
                       </button>
                     </div>

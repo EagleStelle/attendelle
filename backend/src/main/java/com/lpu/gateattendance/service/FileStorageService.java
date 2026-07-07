@@ -60,6 +60,29 @@ public class FileStorageService {
         return PUBLIC_PREFIX + filename;
     }
 
+    /**
+     * Deletes a previously stored student photo given its public path
+     * (e.g. /uploads/students/<uuid>.jpg). No-op if the path is null/blank
+     * or does not point inside the student upload directory.
+     */
+    public void deleteStudentPhoto(String publicPath) {
+        if (publicPath == null || publicPath.isBlank() || !publicPath.startsWith(PUBLIC_PREFIX)) {
+            return;
+        }
+
+        String filename = publicPath.substring(PUBLIC_PREFIX.length());
+        Path target = studentDir.resolve(filename).normalize();
+        if (!target.startsWith(studentDir)) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to delete photo: " + target, e);
+        }
+    }
+
     private String getExtension(String originalFilename) {
         String ext = StringUtils.getFilenameExtension(originalFilename);
         if (ext == null) {

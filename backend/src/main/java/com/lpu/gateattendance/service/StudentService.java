@@ -5,17 +5,20 @@ import com.lpu.gateattendance.dto.StudentResponse;
 import com.lpu.gateattendance.model.AppUser;
 import com.lpu.gateattendance.model.Role;
 import com.lpu.gateattendance.repository.AppUserRepository;
+import com.lpu.gateattendance.repository.AttendanceLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class StudentService {
 
     private final AppUserRepository userRepository;
+    private final AttendanceLogRepository logRepository;
     private final FileStorageService fileStorageService;
 
     public List<StudentResponse> listStudents() {
@@ -53,6 +56,18 @@ public class StudentService {
                 .build();
 
         return toResponse(userRepository.save(student));
+    }
+
+    @Transactional
+    public void deleteStudent(UUID id) {
+        AppUser student = userRepository.findById(id)
+                .filter(u -> u.getRole() == Role.STUDENT)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+        // Remove attendance logs first (FK user_id is NOT NULL, no DB cascade).
+        logRepository.deleteByUserId(id);
+        userRepository.delete(student);
+        fileStorageService.deleteStudentPhoto(student.getPhotoUrl());
     }
 
     private StudentResponse toResponse(AppUser user) {

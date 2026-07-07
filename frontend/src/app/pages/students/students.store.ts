@@ -94,6 +94,14 @@ export class StudentsStore {
       );
   }
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/students/${id}`).pipe(
+      tap(() => {
+        this.students.update((list) => list.filter((s) => s.id !== id));
+      }),
+    );
+  }
+
   getById(id: string): Student | undefined {
     return this.students().find((s) => s.id === id);
   }

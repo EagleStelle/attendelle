@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, Long> {
     List<AttendanceLog> findByUserIdOrderByTimestampDesc(UUID userId);
+    void deleteByUserId(UUID userId);
 }
