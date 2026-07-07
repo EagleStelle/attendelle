@@ -9,6 +9,7 @@ import com.lpu.gateattendance.repository.AttendanceLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +55,48 @@ public class StudentService {
                 .school(blankToNull(request.getSchool()))
                 .photoUrl(photoPath)
                 .build();
+
+        return toResponse(userRepository.save(student));
+    }
+
+    @Transactional
+    public StudentResponse updateStudent(UUID id, CreateStudentRequest request) {
+        AppUser student = userRepository.findById(id)
+                .filter(u -> u.getRole() == Role.STUDENT)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+        String schoolId = request.getIdNumber().trim();
+        userRepository.findBySchoolId(schoolId).ifPresent(other -> {
+            if (!other.getId().equals(id)) {
+                throw new IllegalArgumentException("A student with ID Number " + schoolId + " already exists.");
+            }
+        });
+
+        String rfid = blankToNull(request.getRfid());
+        if (rfid != null) {
+            userRepository.findByRfidTag(rfid).ifPresent(other -> {
+                if (!other.getId().equals(id)) {
+                    throw new IllegalArgumentException("RFID " + rfid + " is already assigned to another student.");
+                }
+            });
+        }
+
+        String[] name = splitName(request.getName());
+        student.setSchoolId(schoolId);
+        student.setFirstName(name[1]);
+        student.setLastName(name[0]);
+        student.setRfidTag(rfid);
+        student.setDepartment(blankToNull(request.getDepartment()));
+        student.setCourse(blankToNull(request.getCourse()));
+        student.setSchool(blankToNull(request.getSchool()));
+
+        // Only replace the photo when a new file is uploaded; otherwise keep it.
+        MultipartFile image = request.getImage();
+        if (image != null && !image.isEmpty()) {
+            String oldPhoto = student.getPhotoUrl();
+            student.setPhotoUrl(fileStorageService.storeStudentPhoto(image));
+            fileStorageService.deleteStudentPhoto(oldPhoto);
+        }
 
         return toResponse(userRepository.save(student));
     }

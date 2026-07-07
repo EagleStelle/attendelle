@@ -47,4 +47,15 @@ public class StudentController {
             return ResponseEntity.internalServerError().body("An error occurred while creating the student.");
         }
     }
+
+    @PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> update(@PathVariable UUID id, @Valid @ModelAttribute CreateStudentRequest request) {
+        try {
+            return ResponseEntity.ok(studentService.updateStudent(id, request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred while updating the student.");
+        }
+    }
 }
