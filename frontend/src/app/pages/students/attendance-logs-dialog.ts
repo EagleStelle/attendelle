@@ -16,6 +16,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { infiniteScroll } from '../../shared/infinite-scroll';
+import { AttendanceStore } from '../attendance/attendance.store';
 import { StudentsStore } from './students.store';
 
 type LogSortKey = 'date' | 'timeIn';
@@ -46,10 +47,17 @@ type LogSortKey = 'date' | 'timeIn';
 })
 export class AttendanceLogsDialog {
   private readonly store = inject(StudentsStore);
+  private readonly attendance = inject(AttendanceStore);
   private readonly context = injectBrnDialogContext<{ studentId: string }>();
 
   protected readonly student = this.store.getById(this.context.studentId);
-  private readonly logs = signal(this.store.getLogs(this.context.studentId));
+
+  // Real attendance records for this student, aggregated per day by the API.
+  private readonly logs = computed(() => {
+    const no = this.student?.studentNo;
+    if (!no) return [];
+    return this.attendance.records().filter((r) => r.studentNo === no);
+  });
 
   protected readonly startDate = signal('');
   protected readonly endDate = signal('');

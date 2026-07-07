@@ -14,12 +14,6 @@ export interface Student {
   school: string;
 }
 
-export interface AttendanceLog {
-  date: string;
-  timeIn: string;
-  timeOut: string | null;
-}
-
 /** Shape returned by GET /api/students. */
 interface StudentResponse {
   id: string;
@@ -117,48 +111,5 @@ export class StudentsStore {
       school: r.school ?? '',
       photo: r.photo ? `${this.fileHost}${r.photo}` : undefined,
     };
-  }
-
-  // Deterministic mock attendance logs, seeded by the student id.
-  // TODO: replace with real attendance history once the logs API is wired.
-  getLogs(id: string): AttendanceLog[] {
-    let seed = this.hashSeed(id);
-    const rand = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff;
-    };
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const fmtTime = (h: number, m: number, s: number) => {
-      const period = h < 12 ? 'AM' : 'PM';
-      const hour = h % 12 === 0 ? 12 : h % 12;
-      return `${pad(hour)}:${pad(m)}:${pad(s)} ${period}`;
-    };
-
-    const logs: AttendanceLog[] = [];
-    const start = new Date(2026, 6, 3);
-    for (let i = 0; i < 18; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() - Math.floor(i * 1.6 + rand() * 2));
-      const inH = 6 + Math.floor(rand() * 6);
-      const timeIn = fmtTime(inH, Math.floor(rand() * 60), Math.floor(rand() * 60));
-      const hasOut = rand() > 0.6;
-      const timeOut = hasOut
-        ? fmtTime(inH + 4 + Math.floor(rand() * 4), Math.floor(rand() * 60), Math.floor(rand() * 60))
-        : null;
-      logs.push({
-        date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-        timeIn,
-        timeOut,
-      });
-    }
-    return logs;
-  }
-
-  private hashSeed(id: string): number {
-    let h = 13;
-    for (let i = 0; i < id.length; i++) {
-      h = (h * 31 + id.charCodeAt(i)) & 0x7fffffff;
-    }
-    return h + 13;
   }
 }
