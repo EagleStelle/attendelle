@@ -1,5 +1,6 @@
 package com.lpu.gateattendance.controller;
 
+import com.lpu.gateattendance.dto.AttendanceRecordResponse;
 import com.lpu.gateattendance.dto.ScanRequest;
 import com.lpu.gateattendance.dto.ScanResponse;
 import com.lpu.gateattendance.service.AttendanceService;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/attendance")
 @CrossOrigin(origins = "*") // Allow frontend to call the API
@@ -15,6 +18,11 @@ import org.springframework.web.bind.annotation.*;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
+
+    @GetMapping
+    public ResponseEntity<List<AttendanceRecordResponse>> list() {
+        return ResponseEntity.ok(attendanceService.listRecords());
+    }
 
     @PostMapping("/scan")
     public ResponseEntity<?> recordScan(@Valid @RequestBody ScanRequest request) {

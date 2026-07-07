@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
 public class ScanResponse {
     private String firstName;
     private String lastName;
+    private String name;
     private String schoolId;
+    private String photo;
     private String role;
     private LogType logType;
     private LocalDateTime timestamp;

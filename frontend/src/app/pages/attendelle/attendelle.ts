@@ -12,14 +12,18 @@ import {
 import { FormsModule } from '@angular/forms';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideSearch, lucideUser } from '@ng-icons/lucide';
-import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { AttendanceStore } from '../attendance/attendance.store';
-import { Student } from '../students/students.store';
+import { AttendanceStore, ScanResponse } from '../attendance/attendance.store';
+
+interface ScannedStudent {
+  name: string;
+  studentNo: string;
+  photo?: string;
+}
 
 @Component({
   selector: 'app-attendelle',
-  imports: [DatePipe, FormsModule, NgIcon, HlmInput, HlmButton],
+  imports: [DatePipe, FormsModule, NgIcon, HlmInput],
   viewProviders: [provideIcons({ lucideSearch, lucideUser })],
   templateUrl: './attendelle.html',
 })
@@ -32,7 +36,7 @@ export class Attendelle implements OnDestroy {
 
   protected readonly identifier = signal('');
   protected readonly now = signal(new Date());
-  protected readonly student = signal<Student | null>(null);
+  protected readonly student = signal<ScannedStudent | null>(null);
   protected readonly error = signal(false);
 
   private readonly input = viewChild<ElementRef<HTMLInputElement>>('scanInput');
@@ -60,19 +64,25 @@ export class Attendelle implements OnDestroy {
     const id = this.identifier().trim();
     if (!id) return;
 
-    const result = this.store.scan(id);
     this.identifier.set('');
     this.focusInput();
 
-    if (result.status === 'not-found') {
-      this.student.set(null);
-      this.error.set(true);
-    } else {
-      this.student.set(result.student);
-      this.error.set(false);
-    }
-
-    this.scheduleReset();
+    this.store.scan(id).subscribe({
+      next: (res: ScanResponse) => {
+        this.student.set({
+          name: res.name,
+          studentNo: res.schoolId,
+          photo: this.store.photoUrl(res.photo),
+        });
+        this.error.set(false);
+        this.scheduleReset();
+      },
+      error: () => {
+        this.student.set(null);
+        this.error.set(true);
+        this.scheduleReset();
+      },
+    });
   }
 
   // Clear the shown result after a few seconds, back to the idle state.
