@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideArchive,
+  lucideArchiveRestore,
   lucideChevronDown,
   lucideChevronsUpDown,
   lucideChevronUp,
@@ -25,6 +27,8 @@ import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { StudentDialog } from './student-dialog';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { FieldCombobox } from '../../shared/fields/field-combobox';
 import {
   type ColumnDef,
   type RowSelectionState,
@@ -50,13 +54,17 @@ import { type Student, StudentsStore } from './students.store';
     HlmCheckbox,
     HlmBadge,
     HlmSeparator,
+    HlmLabel,
     HlmTableImports,
     HlmAvatarImports,
+    FieldCombobox,
   ],
   viewProviders: [
     provideIcons({
       lucidePlus,
       lucideRefreshCw,
+      lucideArchive,
+      lucideArchiveRestore,
       lucideTrash2,
       lucideUpload,
       lucideFileDown,
@@ -76,7 +84,23 @@ export class Students {
   private readonly store = inject(StudentsStore);
   private readonly fieldsStore = inject(FieldsStore);
   private readonly dialog = inject(HlmDialogService);
-  protected readonly data = this.store.students;
+
+  // Status filter: Active (default) hides archived, Archived shows only them,
+  // All shows both. Backed by the reusable searchable combobox.
+  protected readonly statusOptions = ['All', 'Active', 'Archived'];
+  protected readonly statusFilter = signal<string | null>('Active');
+
+  protected readonly data = computed<Student[]>(() => {
+    const all = this.store.students();
+    switch (this.statusFilter()) {
+      case 'Archived':
+        return all.filter((s) => s.archived);
+      case 'All':
+        return all;
+      default:
+        return all.filter((s) => !s.archived);
+    }
+  });
 
   protected readonly sorting = signal<SortingState>([]);
   protected readonly globalFilter = signal('');
@@ -125,6 +149,7 @@ export class Students {
     // Reset the reveal window when the filtered result set changes.
     effect(() => {
       this.globalFilter();
+      this.statusFilter();
       this.scroll.reset();
     });
   }
@@ -148,6 +173,12 @@ export class Students {
 
   protected refresh(): void {
     this.store.load();
+  }
+
+  protected toggleArchive(student: Student): void {
+    this.store.setArchived(student.id, !student.archived).subscribe({
+      error: () => alert('Failed to update student status. Please try again.'),
+    });
   }
 
   protected deleteStudent(student: Student): void {

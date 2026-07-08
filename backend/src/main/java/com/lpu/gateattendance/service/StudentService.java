@@ -115,6 +115,15 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentResponse setArchived(UUID id, boolean archived) {
+        AppUser student = userRepository.findById(id)
+                .filter(u -> u.getRole() == Role.STUDENT)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+        student.setArchived(archived);
+        return toResponse(userRepository.save(student));
+    }
+
+    @Transactional
     public void deleteStudent(UUID id) {
         AppUser student = userRepository.findById(id)
                 .filter(u -> u.getRole() == Role.STUDENT)
@@ -169,6 +178,7 @@ public class StudentService {
                 .rfid(user.getRfidTag())
                 .fieldValues(values)
                 .photo(user.getPhotoUrl())
+                .archived(user.isArchived())
                 .build();
     }
 

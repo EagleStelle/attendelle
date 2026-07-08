@@ -20,7 +20,6 @@ import {
   lucideSettings,
   lucideUserRound,
   lucideUsers,
-  lucideUserX,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import {
@@ -54,7 +53,6 @@ interface NavItem {
       lucideLayoutDashboard,
       lucideUsers,
       lucideClock,
-      lucideUserX,
       lucidePanelLeft,
       lucideGraduationCap,
       lucideUserRound,
@@ -72,7 +70,6 @@ export class AdminLayout {
     { label: 'Students', icon: 'lucideUsers', route: '/students' },
     { label: 'Attendance', icon: 'lucideClock', route: '/attendance' },
     { label: 'Manage', icon: 'lucideSettings', route: '/manage' },
-    { label: 'Deleted Students', icon: 'lucideUserX', route: '/deleted-students' },
   ];
 
   private readonly router = inject(Router);

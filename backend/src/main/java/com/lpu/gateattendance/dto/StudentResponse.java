@@ -15,4 +15,5 @@ public class StudentResponse {
     // Custom-field id -> selected value for this student.
     private Map<String, String> fieldValues;
     private String photo;
+    private boolean archived;
 }

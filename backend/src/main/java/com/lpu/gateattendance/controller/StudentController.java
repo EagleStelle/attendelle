@@ -25,6 +25,17 @@ public class StudentController {
         return ResponseEntity.ok(studentService.listStudents());
     }
 
+    @PatchMapping("/{id}/archive")
+    public ResponseEntity<?> setArchived(@PathVariable UUID id, @RequestParam boolean archived) {
+        try {
+            return ResponseEntity.ok(studentService.setArchived(id, archived));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred while updating the student.");
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable UUID id) {
         try {

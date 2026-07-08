@@ -11,6 +11,8 @@ export interface Student {
   rfid: string | null;
   // Configurable-column values, keyed by field id.
   fieldValues: Record<string, string>;
+  // Archived students are retained but hidden from the default (Active) view.
+  archived: boolean;
 }
 
 /** Shape returned by GET /api/students. */
@@ -21,6 +23,7 @@ interface StudentResponse {
   rfid: string | null;
   fieldValues: Record<string, string> | null;
   photo: string | null;
+  archived: boolean;
 }
 
 /** Fields sent to POST /api/students (as multipart/form-data). */
@@ -88,6 +91,20 @@ export class StudentsStore {
       );
   }
 
+  setArchived(id: string, archived: boolean): Observable<StudentResponse> {
+    return this.http
+      .patch<StudentResponse>(`${this.apiUrl}/students/${id}/archive`, null, {
+        params: { archived },
+      })
+      .pipe(
+        tap((updated) => {
+          this.students.update((list) =>
+            list.map((s) => (s.id === id ? this.toStudent(updated) : s)),
+          );
+        }),
+      );
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/students/${id}`).pipe(
       tap(() => {
@@ -120,6 +137,7 @@ export class StudentsStore {
       rfid: r.rfid ?? null,
       fieldValues: r.fieldValues ?? {},
       photo: r.photo ? `${this.fileHost}${r.photo}` : undefined,
+      archived: r.archived,
     };
   }
 }

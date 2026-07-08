@@ -7,7 +7,6 @@ import { Students } from './pages/students/students';
 import { AttendanceLogs } from './pages/students/attendance';
 import { Attendance } from './pages/attendance/attendance';
 import { Manage } from './pages/manage/manage';
-import { Placeholder } from './pages/placeholder/placeholder';
 import { authGuard } from './shared/auth/auth.guard';
 
 export const routes: Routes = [
@@ -26,11 +25,6 @@ export const routes: Routes = [
       },
       { path: 'attendance', component: Attendance },
       { path: 'manage', component: Manage },
-      {
-        path: 'deleted-students',
-        component: Placeholder,
-        data: { title: 'Deleted Students' },
-      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

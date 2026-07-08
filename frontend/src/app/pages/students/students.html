@@ -1,6 +1,6 @@
 <div class="flex min-h-0 flex-1 flex-col gap-4">
   <!-- Toolbar -->
-  <div class="flex flex-wrap items-center gap-2">
+  <div class="flex flex-wrap items-end gap-2">
     <!-- Search -->
     <div class="relative min-w-0 flex-1">
       <ng-icon
@@ -15,6 +15,20 @@
         [ngModel]="globalFilter()"
         (ngModelChange)="globalFilter.set($event)"
       />
+    </div>
+
+    <!-- Status filter -->
+    <div class="flex flex-col gap-1">
+      <label hlmLabel for="status-filter">Status</label>
+      <div class="w-36">
+        <app-field-combobox
+          id="status-filter"
+          [options]="statusOptions"
+          [value]="statusFilter()"
+          (valueChange)="statusFilter.set($event)"
+          placeholder="Status"
+        />
+      </div>
     </div>
 
     <hlm-separator orientation="vertical" class="mx-1 h-6" />
@@ -152,6 +166,19 @@
                         (click)="openEditStudent(row.original)"
                       >
                         <ng-icon name="lucidePencil" class="text-base" />
+                      </button>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="ghost"
+                        class="hover:bg-background"
+                        [attr.aria-label]="row.original.archived ? 'Restore student' : 'Archive student'"
+                        (click)="toggleArchive(row.original)"
+                      >
+                        <ng-icon
+                          [name]="row.original.archived ? 'lucideArchiveRestore' : 'lucideArchive'"
+                          class="text-base"
+                        />
                       </button>
                       <button
                         hlmBtn
