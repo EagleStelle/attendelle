@@ -4,7 +4,7 @@ import { Attendelle } from './pages/attendelle/attendelle';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { Students } from './pages/students/students';
-import { AttendanceLogs } from './pages/students/attendance-logs';
+import { AttendanceLogs } from './pages/students/attendance';
 import { Attendance } from './pages/attendance/attendance';
 import { Manage } from './pages/manage/manage';
 import { Placeholder } from './pages/placeholder/placeholder';

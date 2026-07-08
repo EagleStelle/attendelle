@@ -43,7 +43,7 @@ type LogSortKey = 'date' | 'timeIn';
       lucideChevronDown,
     }),
   ],
-  templateUrl: './attendance-logs-dialog.html',
+  templateUrl: './attendance-dialog.html',
 })
 export class AttendanceLogsDialog {
   private readonly store = inject(StudentsStore);

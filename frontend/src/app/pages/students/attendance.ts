@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
-import { AttendanceLogsDialog } from './attendance-logs-dialog';
+import { AttendanceLogsDialog } from './attendance-dialog';
 
 /**
  * Route-driven opener: visiting /students/:id/logs opens the attendance
